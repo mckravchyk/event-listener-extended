@@ -1,11 +1,22 @@
+import cloneDeep from 'clone-deep';
+
 import { getEventListenerOptionsSupport } from '../featureDetect/eventListener';
+
+/**
+ * The third argument for addEventListener
+ */
+type EventListenerArg = boolean | {
+  capture: boolean
+  once?: boolean
+  passive?: boolean
+}
 
 interface Options {
 
   /**
-   * Event target
+   * Event target or an array of event targets
    */
-  target: HTMLElement | Document
+  target: EventTarget | Array<EventTarget> | NodeList
 
   /**
    * Event name to bind. It's possible to pass multiple event names, separated by space.
@@ -47,15 +58,6 @@ interface Options {
 
 }
 
-/**
- * The third argument for addEventListener
- */
-type EventListenerArg = boolean | {
-  capture: boolean
-  once?: boolean
-  passive?: boolean
-}
-
 const optionSupport = getEventListenerOptionsSupport();
 
 /**
@@ -63,7 +65,7 @@ const optionSupport = getEventListenerOptionsSupport();
  *
  * Usage:
  *
- * Attach event: let listener = new DelegatedEvent(target, eventName, selector, callback);
+ * Attach event listener: let listener = new SimpleEventListener(options);
  *
  * Detach event: listener.off()
  */
@@ -72,7 +74,7 @@ class SimpleEventListener {
 
   private delegateSelector : string | false;
 
-  private target : HTMLElement | Document | null;
+  private targets : Array<EventTarget> | null;
 
   private callback : Function | null;
 
@@ -82,7 +84,18 @@ class SimpleEventListener {
   private eventListenerArg : EventListenerArg = false;
 
   constructor(options: Options) {
-    this.target = options.target;
+    // Setup targets property
+    if (Array.isArray(options.target)) {
+      this.targets = cloneDeep(options.target);
+    } else if (options.target instanceof NodeList) {
+      // TODO: Ensure it works with ES5 target
+      // Convert the NodeList to an Array so there are no doubts on iteration
+      this.targets = Array.from(options.target);
+    } else {
+      this.targets = [options.target as EventTarget];
+    }
+
+    // Setup events propertys
     this.events = options.eventName.split(' ');
 
     this.delegateSelector = (options.delegate) ? options.delegate.selector : false;
@@ -92,43 +105,65 @@ class SimpleEventListener {
     this.setEventListenerArg(options);
 
     // Attach event listener(s)
-    for (let i = 0; i < this.events.length; i += 1) {
-      this.target.addEventListener(this.events[i], this.processListener, this.eventListenerArg);
-    }
+    this.addListeners();
   }
 
-  // private addListener()
-
-  private processListener = (e: Event) : void => {
-    // Note: Using assertion operator "!" - target and callback will never be null here
-    if (this.delegateSelector) {
-      // Execute the callback for each child of the target which matches the selector
-      this.target!.querySelectorAll(this.delegateSelector).forEach((element, index) => {
-        this.callback!.call(element, e);
-      });
-    } else {
-      this.callback!.call(this.target, e);
-    }
-  }
-
+  /**
+   * Destroy the event listener
+   */
   public off() : void {
-    if (this.target === null || this.callback === null) {
+    if (this.targets === null || this.callback === null) {
       return;
     }
 
-    for (let i = 0; i < this.events.length; i += 1) {
-      this.target.removeEventListener(
-        this.events[i],
-        this.processListener,
-        this.eventListenerArg,
-      );
-    }
+    this.removeListeners();
 
-    this.target = null;
+    this.targets = null;
     this.callback = null;
     this.eventListenerArg = false;
   }
 
+  /**
+   * Callback for addEventListener
+   * @param e
+   */
+  private processListener = (e: Event) : void => {
+    // Note: Using assertion operator "!" - target and callback will never be null here
+    this.callback!.call(e.target, e);
+  }
+
+  /**
+   * Add an event listener for each target and event name supplied
+   */
+  private addListeners() {
+    if (this.targets === null) {
+      throw new Error('Property target is null');
+    }
+    this.targets.forEach((target) => {
+      this.events.forEach((eventName) => {
+        target.addEventListener(eventName, this.processListener, this.eventListenerArg);
+      });
+    });
+  }
+
+  /**
+   * Remove all listeners
+   */
+  private removeListeners() {
+    if (this.targets === null) {
+      throw new Error('Property target is null');
+    }
+    this.targets.forEach((target) => {
+      this.events.forEach((eventName) => {
+        target.removeEventListener(eventName, this.processListener, this.eventListenerArg);
+      });
+    });
+  }
+
+  /**
+   * Set the 3rd argument for addEventListener
+   * @param constructorOptions
+   */
   private setEventListenerArg(constructorOptions: Options): void {
     if (!optionSupport.supportsOptions) {
       // If options not supported, use the old schema with boolean useCapture as the third parameter
