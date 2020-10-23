@@ -25,17 +25,18 @@ interface Options {
   eventName: string
 
   /**
+   * Callback - executes when the event is fired
+   */
+  // callback: Function
+  callback(this: EventTarget, e: Event) : void;
+
+  /**
    * Delegate
    * Use this to delegate event to child elements which match the selector
    */
   delegate?: {
     selector: string
   } | undefined
-
-  /**
-   * Callback - executes when the event is fired
-   */
-  callback: Function
 
   /**
    * A Boolean indicating that events of this type will be dispatched to the registered
@@ -76,7 +77,7 @@ class SimpleEventListener {
 
   private targets : Array<EventTarget> | null;
 
-  private callback : Function | null;
+  private callback : Options['callback'] | null;
 
   /**
    * The third argument for addEventListener / removeEventListener
@@ -89,13 +90,13 @@ class SimpleEventListener {
       this.targets = cloneDeep(options.target);
     } else if (options.target instanceof NodeList) {
       // TODO: Ensure it works with ES5 target
-      // Convert the NodeList to an Array so there are no doubts on iteration
+      // Convert NodeList to Array so there are no doubts on iteration and backward compatibility
       this.targets = Array.from(options.target);
     } else {
       this.targets = [options.target as EventTarget];
     }
 
-    // Setup events propertys
+    // Setup events properties
     this.events = options.eventName.split(' ');
 
     this.delegateSelector = (options.delegate) ? options.delegate.selector : false;
@@ -129,7 +130,13 @@ class SimpleEventListener {
    */
   private processListener = (e: Event) : void => {
     // Note: Using assertion operator "!" - target and callback will never be null here
-    this.callback!.call(e.target, e);
+    this.callback!.call(e.currentTarget!, e);
+
+    if (this.delegateSelector) {
+
+      // Get the implementation from somewhere else
+
+    }
   }
 
   /**
