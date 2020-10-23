@@ -1,4 +1,5 @@
 import cloneDeep from 'clone-deep';
+import matchesSelector from 'matches-selector';
 
 import { getEventListenerOptionsSupport } from '../featureDetect/eventListener';
 
@@ -129,13 +130,33 @@ class SimpleEventListener {
    * @param e
    */
   private processListener = (e: Event) : void => {
-    // Note: Using assertion operator "!" - target and callback will never be null here
-    this.callback!.call(e.currentTarget!, e);
+    // XXX: Could it ever eveluate as true?
+    if (e.target === null || e.currentTarget === null) {
+      return;
+    }
 
-    if (this.delegateSelector) {
+    // The target listener was attached to
+    const listenerTarget = e.currentTarget;
 
-      // Get the implementation from somewhere else
+    // The event target which is the source of the event
+    const eventSource = e.target;
 
+    if (!this.delegateSelector) {
+      this.callback!.call(listenerTarget, e);
+      return;
+    }
+
+    // Process delegated event if the event target is Element-type
+    if (eventSource instanceof Element) {
+      let currentNode: Node | null = eventSource;
+
+      // Traverse the dom up fron the event source and check if any element matches the selector
+      while (currentNode !== listenerTarget && currentNode !== null) {
+        if (matchesSelector(currentNode, this.delegateSelector)) {
+          this.callback!.call(currentNode, e);
+        }
+        currentNode = currentNode.parentNode;
+      }
     }
   }
 
