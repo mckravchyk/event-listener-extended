@@ -67,6 +67,10 @@ beforeAll(() => {
  *  E.g. should I test whether both multiple event names and multiple event targets work?
  * Should I test if multiple event names + multiple event targets + delegated events work?
  *
+ * Tests:
+ *  Event capturing
+ *
+ *
  */
 
 describe('Test SimpleEventListener', () => {

@@ -1,4 +1,6 @@
 import cloneDeep from 'clone-deep';
+
+// TODO: Add a declaration file for this module
 import matchesSelector from 'matches-selector';
 
 import { getEventListenerOptionsSupport } from '../featureDetect/eventListener';
