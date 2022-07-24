@@ -1,6 +1,4 @@
-import { SimpleEventListener } from './SimpleEventListener';
-
-import type { SimpleEventListenerOptions } from './SimpleEventListener';
+import { SimpleEventListener } from '../src/SimpleEventListener';
 
 const listItemCount = 4;
 
