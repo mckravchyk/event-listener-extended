@@ -3,7 +3,7 @@ import cloneDeep from 'clone-deep';
 // TODO: Add a declaration file for this module
 import matchesSelector from 'matches-selector';
 
-import { getEventListenerOptionsSupport } from '../featureDetect/eventListener';
+import { detectEventListener } from '../../detect-event-listener/src/detect-event-listener';
 
 /**
  * The third argument for addEventListener
@@ -62,7 +62,7 @@ export interface Options {
 
 }
 
-const optionSupport = getEventListenerOptionsSupport();
+const optionSupport = detectEventListener();
 
 /**
  * A very simple dom event creation class with support for event delegation
