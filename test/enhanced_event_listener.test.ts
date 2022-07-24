@@ -3,23 +3,19 @@ import { EnhancedEventListener } from '../src/enhanced_event_listener';
 const listItemCount = 4;
 
 /**
- * Trigger {eventName} on {target} {count} times
- * @param target
- * @param eventName
- * @param count (optional) Default 1
+ * Triggers {eventName} on {target} {count} times
  */
-const fireEvent = (target: EventTarget, eventName: string, count?: number) : void => {
+function fireEvent(target: EventTarget, eventName: string, count?: number): void {
   if (typeof count === 'undefined') {
     count = 1;
   }
-  for (let i = 0; i < count; i++) {
+
+  for (let i = 0; i < count; i += 1) {
     target.dispatchEvent(new Event(eventName, { bubbles: true }));
   }
-};
+}
 
-beforeAll(() => {
-  // Set up dom
-
+function setUpDOM() {
   let liItems = '';
 
   for (let i = 0; i < listItemCount; i += 1) {
@@ -34,42 +30,12 @@ beforeAll(() => {
     `;
 
   document.body.innerHTML = html;
-});
+}
 
-/**
- * Things to test:
- *
- * Multiple event names
- * Multiple targets (to implement)
- * Delegated events (to implement)
- *
- * once (to implement)
- *
- * passive events (expect an error to be thrown when calling e.preventDefault())
- * custom dom events
- *
- * off() - will be tested in every situation
- *
- *
- * Test cases:
- *
- * 1. Click event on a single target with a single event name
- * 2. Multiple event names
- * 3. Multiple event targets
- * 3. Delegated event
- * 4. Once
- * 5. Passive event
- * 6. Custom dom events
- *
- * Is there a need to do combined tests?
- *  E.g. should I test whether both multiple event names and multiple event targets work?
- * Should I test if multiple event names + multiple event targets + delegated events work?
- *
- * Tests:
- *  Event capturing
- *
- *
- */
+beforeAll(setUpDOM);
+
+// TODO: Test event properties and this arguments. How event targets are going to work with
+// delegated events?
 
 describe('Test EnhancedEventListener', () => {
   test('Click event fires on target and is removed properly', () => {
@@ -87,7 +53,7 @@ describe('Test EnhancedEventListener', () => {
     const listener = new EnhancedEventListener({
       target: eventTarget,
       eventName: 'click',
-      callback(e: Event) {
+      callback() {
         eventFireCount += 1;
         callbackThisContext = this;
       },
@@ -114,7 +80,7 @@ describe('Test EnhancedEventListener', () => {
     const listener1 = new EnhancedEventListener({
       target: eventTarget,
       eventName: 'click',
-      callback: (e: Event) => {
+      callback: () => {
         listener1FireCount += 1;
       },
     });
@@ -122,7 +88,7 @@ describe('Test EnhancedEventListener', () => {
     const listener2 = new EnhancedEventListener({
       target: eventTarget,
       eventName: 'click',
-      callback: (e: Event) => {
+      callback: () => {
         listener2FireCount += 1;
       },
     });
@@ -148,7 +114,7 @@ describe('Test EnhancedEventListener', () => {
     const listener = new EnhancedEventListener({
       target: eventTarget,
       eventName: 'mousedown click',
-      callback: (e: Event) => {
+      callback: () => {
         eventFireCount += 1;
       },
     });
@@ -175,7 +141,7 @@ describe('Test EnhancedEventListener', () => {
     const listener = new EnhancedEventListener({
       target: targets,
       eventName: 'click',
-      callback: (e: Event) => {
+      callback: () => {
         eventFireCount += 1;
       },
     });
@@ -200,7 +166,7 @@ describe('Test EnhancedEventListener', () => {
     const listener = new EnhancedEventListener({
       target: targets,
       eventName: 'click',
-      callback: (e: Event) => {
+      callback: () => {
         eventFireCount += 1;
       },
     });
@@ -218,7 +184,7 @@ describe('Test EnhancedEventListener', () => {
     expect(eventFireCount).toBe(2 * targets.length);
   });
 
-
+  // TODO: passive events (expect an error to be thrown when calling e.preventDefault())
   // test('Passive events', () => {
   //   const listener = new EnhancedEventListener({
   //     target: window,
@@ -232,6 +198,8 @@ describe('Test EnhancedEventListener', () => {
   //   fireEvent(window, 'touchmove', 1);
   // });
 
+  // TODO: use capture
+
   test('Delegated click event fires', () => {
     const delegateTarget = document.getElementById('list-1')!;
     const listItems = delegateTarget.querySelectorAll('.list-item');
@@ -242,7 +210,7 @@ describe('Test EnhancedEventListener', () => {
     const parentListener = new EnhancedEventListener({
       target: delegateTarget,
       eventName: 'click',
-      callback: (e: Event) => {
+      callback: () => {
         parentFireCount += 1;
       },
     });
@@ -250,7 +218,7 @@ describe('Test EnhancedEventListener', () => {
     const delegateListener = new EnhancedEventListener({
       target: delegateTarget,
       eventName: 'click',
-      callback: (e: Event) => {
+      callback: () => {
         childFireCount += 1;
       },
       delegate: {
@@ -258,19 +226,14 @@ describe('Test EnhancedEventListener', () => {
       },
     });
 
-    /**
-     * Trigger click event on the parent,
-     * expect that the parent listener fired,
-     * but the child did not
-     */
+    // Trigger click event on the parent, expect that the parent listener fired, but the child did
+    // not.
     fireEvent(delegateTarget, 'click', 1);
     expect(parentFireCount).toBe(1);
     expect(childFireCount).toBe(0);
 
-    /**
-     * Trigger click event twice on each child item
-     * Expect that the listener fired for both parent and child items
-     */
+    // Trigger click event twice on each child item. Expect that the listener fired for both
+    // parent and child items.
     fireEvent(listItems[0], 'click', 2);
     fireEvent(listItems[1], 'click', 2);
     expect(parentFireCount).toBe(5);
@@ -288,3 +251,7 @@ describe('Test EnhancedEventListener', () => {
     expect(childFireCount).toBe(4);
   });
 });
+
+// TODO: Custom DOM events.
+
+// TODO: Catch-all - delegated event on multiple targets with multiple event names.
