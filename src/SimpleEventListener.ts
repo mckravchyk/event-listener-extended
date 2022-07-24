@@ -14,7 +14,7 @@ type EventListenerArg = boolean | {
   passive?: boolean
 }
 
-interface Options {
+export interface Options {
 
   /**
    * Event target or an array of event targets
@@ -73,7 +73,7 @@ const optionSupport = getEventListenerOptionsSupport();
  *
  * Detach event: listener.off()
  */
-class SimpleEventListener {
+export class SimpleEventListener {
   private events : Array<string>;
 
   private delegateSelector : string | false;
@@ -212,6 +212,3 @@ class SimpleEventListener {
     }
   }
 }
-
-export type { Options as SimpleEventListenerOptions };
-export { SimpleEventListener };
