@@ -1,4 +1,4 @@
-import { SimpleEventListener } from '../src/SimpleEventListener';
+import { EnhancedEventListener } from '../src/enhanced_event_listener';
 
 const listItemCount = 4;
 
@@ -71,7 +71,7 @@ beforeAll(() => {
  *
  */
 
-describe('Test SimpleEventListener', () => {
+describe('Test EnhancedEventListener', () => {
   test('Click event fires on target and is removed properly', () => {
     // The target which the event is bound too
     const eventTarget = document.getElementById('list-1')!;
@@ -84,7 +84,7 @@ describe('Test SimpleEventListener', () => {
     // Number of test rounds for the event dispatch
     const rounds = 2;
 
-    const listener = new SimpleEventListener({
+    const listener = new EnhancedEventListener({
       target: eventTarget,
       eventName: 'click',
       callback(e: Event) {
@@ -111,7 +111,7 @@ describe('Test SimpleEventListener', () => {
     let listener1FireCount = 0;
     let listener2FireCount = 0;
 
-    const listener1 = new SimpleEventListener({
+    const listener1 = new EnhancedEventListener({
       target: eventTarget,
       eventName: 'click',
       callback: (e: Event) => {
@@ -119,7 +119,7 @@ describe('Test SimpleEventListener', () => {
       },
     });
 
-    const listener2 = new SimpleEventListener({
+    const listener2 = new EnhancedEventListener({
       target: eventTarget,
       eventName: 'click',
       callback: (e: Event) => {
@@ -145,7 +145,7 @@ describe('Test SimpleEventListener', () => {
 
     let eventFireCount = 0;
 
-    const listener = new SimpleEventListener({
+    const listener = new EnhancedEventListener({
       target: eventTarget,
       eventName: 'mousedown click',
       callback: (e: Event) => {
@@ -172,7 +172,7 @@ describe('Test SimpleEventListener', () => {
     ];
     let eventFireCount = 0;
 
-    const listener = new SimpleEventListener({
+    const listener = new EnhancedEventListener({
       target: targets,
       eventName: 'click',
       callback: (e: Event) => {
@@ -197,7 +197,7 @@ describe('Test SimpleEventListener', () => {
     const targets = document.querySelectorAll('.list')!;
     let eventFireCount = 0;
 
-    const listener = new SimpleEventListener({
+    const listener = new EnhancedEventListener({
       target: targets,
       eventName: 'click',
       callback: (e: Event) => {
@@ -220,7 +220,7 @@ describe('Test SimpleEventListener', () => {
 
 
   // test('Passive events', () => {
-  //   const listener = new SimpleEventListener({
+  //   const listener = new EnhancedEventListener({
   //     target: window,
   //     eventName: 'touchmove',
   //     callback: (e: Event) => {
@@ -239,7 +239,7 @@ describe('Test SimpleEventListener', () => {
     let parentFireCount = 0;
     let childFireCount = 0;
 
-    const parentListener = new SimpleEventListener({
+    const parentListener = new EnhancedEventListener({
       target: delegateTarget,
       eventName: 'click',
       callback: (e: Event) => {
@@ -247,7 +247,7 @@ describe('Test SimpleEventListener', () => {
       },
     });
 
-    const delegateListener = new SimpleEventListener({
+    const delegateListener = new EnhancedEventListener({
       target: delegateTarget,
       eventName: 'click',
       callback: (e: Event) => {

@@ -73,7 +73,7 @@ const optionSupport = getEventListenerOptionsSupport();
  *
  * Detach event: listener.off()
  */
-export class SimpleEventListener {
+export class EnhancedEventListener {
   private events : Array<string>;
 
   private delegateSelector : string | false;

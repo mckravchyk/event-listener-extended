@@ -1,5 +1,5 @@
-import { SimpleEventListener } from './SimpleEventListener';
-import type { Options } from './SimpleEventListener';
+import { EnhancedEventListener } from './enhanced_event_listener';
+import type { Options } from './enhanced_event_listener';
 
-export { SimpleEventListener };
+export { EnhancedEventListener };
 export type { Options };
