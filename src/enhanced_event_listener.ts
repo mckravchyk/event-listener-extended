@@ -1,5 +1,3 @@
-import cloneDeep from 'clone-deep';
-
 import matchesSelector from 'matches-selector';
 
 import { detectEventListener } from '../../detect-event-listener/src/detect-event-listener';
@@ -80,8 +78,7 @@ export class EnhancedEventListener {
 
   constructor(options: Options) {
     if (Array.isArray(options.target)) {
-      // FIXME: deep clone is useless here. It should be a shallow clone.
-      this.targets = cloneDeep(options.target);
+      this.targets = [...options.target];
     }
     else if (options.target instanceof NodeList) {
       // TODO: Ensure it works with ES5 target
