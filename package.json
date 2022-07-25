@@ -8,7 +8,7 @@
   "private": true,
   "main": "./dist/enhanced-event-listener.common.js",
   "module": "./dist/enhanced-event-listener.esm.js",
-  "types": "./dist/enhanced-event-listener.d.ts",
+  "types": "./dist/enhanced_event_listener.d.ts",
   "scripts": {
     "lint": "eslint --ext ts src test",
     "check-types": "tsc --noemit",
