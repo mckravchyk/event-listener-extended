@@ -47,6 +47,7 @@
     "typescript": "^4.7.4"
   },
   "dependencies": {
+    "detect-event-listener": "file:../detect-event-listener",
     "matches-selector": "^1.2.0"
   }
 }

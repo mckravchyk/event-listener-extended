@@ -1,6 +1,6 @@
 import matchesSelector from 'matches-selector';
 
-import { detectEventListener } from '../../detect-event-listener/src/detect-event-listener';
+import { detectEventListener } from 'detect-event-listener';
 
 /**
  * The third argument for addEventListener
