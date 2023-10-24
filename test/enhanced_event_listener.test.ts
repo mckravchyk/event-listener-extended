@@ -233,6 +233,48 @@ describe('enhanced-event-listener', () => {
     expect(childFireCount).toBe(4);
   });
 
+  test('A listener added with `once` option observes only the first event', () => {
+    // The target which the event is bound too
+    const eventTarget = document.getElementById('list-1')!;
+
+    // A child node of the event target - the event will be fired on the child node
+    const inputTarget = eventTarget.childNodes[0];
+
+    let fireCount = 0;
+
+    addListener({
+      target: eventTarget,
+      eventName: 'mousedown click',
+      callback() { fireCount += 1; },
+      once: true,
+    });
+
+    fireEvent(inputTarget, 'mousedown', 1);
+    expect(fireCount).toBe(1);
+    fireEvent(inputTarget, 'click', 1);
+    expect(fireCount).toBe(1);
+  });
+
+  test('A listener with a delegate selector targeting multiple nodes in the same lineage is fired for each matched node', () => {
+    const delegateTarget = document.getElementById('container')!;
+    let fireCount = 0;
+
+    addListener({
+      target: delegateTarget,
+      eventName: 'click',
+      callback: () => {
+        fireCount += 1;
+      },
+      delegate: { selector: '.list, .list-item' },
+
+      // This is not just for convenience - once should not affect this behaviour - the listener
+      // should still fire for each match in the same target / event combination.
+      once: true,
+    });
+
+    fireEvent(delegateTarget.children[0].children[0], 'click', 1);
+    expect(fireCount).toBe(2);
+  });
   test('Capture is supported', () => {
     const originalAddListener = window.addEventListener;
     const addListenerMock = jest.fn(window.addEventListener);
@@ -311,7 +353,3 @@ describe('enhanced-event-listener', () => {
     window.addEventListener = originalAddListener;
   });
 });
-
-// TODO: Custom DOM events.
-
-// TODO: Catch-all - delegated event on multiple targets with multiple event names.

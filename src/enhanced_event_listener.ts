@@ -39,9 +39,14 @@ export interface Options {
    */
   passive?: boolean
 
-  // TODO:
-  // once?: boolean
-
+  /**
+   * Whether the listener should respond only to the first event that is emitted after it has been
+   * attached.
+   *
+   * In the case of delegated events, if the delegate selector targets multiple nodes in the same
+   * lineage of target's descendants, the listener will still fire for each matched node.
+   */
+  once?: boolean
 }
 
 /**
@@ -75,9 +80,9 @@ function getEventListenerArg(constructorOptions: Options): EventListenerArg {
 function createCallback(
   callback: (this: EventTarget, e: Event) => void,
   delegateSelector: string | false,
+  unsubscribe: { unsubscribe?: () => void },
 ) {
   return (e: Event) => {
-    // XXX: Could it ever eveluate as true?
     if (e.target === null || e.currentTarget === null) {
       return;
     }
@@ -90,18 +95,32 @@ function createCallback(
 
     if (!delegateSelector) {
       callback.call(listenerTarget, e);
+
+      if (unsubscribe.unsubscribe) {
+        unsubscribe.unsubscribe();
+        delete unsubscribe.unsubscribe;
+      }
+
       return;
     }
 
     if (eventSource instanceof Element) {
       let currentNode: Node | null = eventSource;
+      let matchFound = false;
 
       // Traverse the dom up fron the event source and check if any element matches the selector
       while (currentNode !== listenerTarget && currentNode !== null) {
         if (matchesSelector(currentNode, delegateSelector)) {
           callback.call(currentNode, e);
+          matchFound = true;
         }
+
         currentNode = currentNode.parentNode;
+      }
+
+      if (matchFound && unsubscribe.unsubscribe) {
+        unsubscribe.unsubscribe();
+        delete unsubscribe.unsubscribe;
       }
     }
   };
@@ -133,7 +152,23 @@ export function addListener(options: Options): () => void {
 
   const eventListenerArg = getEventListenerArg(options);
 
-  const callback = createCallback(options.callback, delegateSelector);
+  // callback and unsubscribe circularly depend on each other. It's either this container that is
+  // updated or having the callback refer itself / closure inside createCallback.
+  const unsubscribeContainer: { unsubscribe?: () => void } = { };
+
+  const callback = createCallback(options.callback, delegateSelector, unsubscribeContainer);
+
+  const unsubscribe = () => {
+    targets.forEach((target) => {
+      events.forEach((eventName) => {
+        target.removeEventListener(eventName, callback, eventListenerArg);
+      });
+    });
+  };
+
+  if (options.once) {
+    unsubscribeContainer.unsubscribe = unsubscribe;
+  }
 
   targets.forEach((target) => {
     events.forEach((eventName) => {
@@ -141,11 +176,5 @@ export function addListener(options: Options): () => void {
     });
   });
 
-  return () => {
-    targets.forEach((target) => {
-      events.forEach((eventName) => {
-        target.removeEventListener(eventName, callback, eventListenerArg);
-      });
-    });
-  };
+  return unsubscribe;
 }
