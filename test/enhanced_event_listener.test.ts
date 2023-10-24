@@ -3,13 +3,9 @@ import { addListener } from '../src/enhanced_event_listener';
 const listItemCount = 4;
 
 /**
- * Triggers {eventName} on {target} {count} times
+ * Emits `eventName` on `target` `count` times
  */
-function fireEvent(target: EventTarget, eventName: string, count?: number): void {
-  if (typeof count === 'undefined') {
-    count = 1;
-  }
-
+function fireEvent(target: EventTarget, eventName: string, count = 1): void {
   for (let i = 0; i < count; i += 1) {
     target.dispatchEvent(new Event(eventName, { bubbles: true }));
   }
@@ -34,11 +30,8 @@ function setUpDOM() {
 
 beforeAll(setUpDOM);
 
-// TODO: Test event properties and this arguments. How event targets are going to work with
-// delegated events?
-
 describe('enhanced-event-listener', () => {
-  test('Click event fires on target and is removed properly', () => {
+  test('A listener observes an event until removed', () => {
     // The target which the event is bound too
     const eventTarget = document.getElementById('list-1')!;
     // A child node of the event target - the event will be fired on the child node
@@ -104,7 +97,7 @@ describe('enhanced-event-listener', () => {
     expect(fireCount).toBe(3);
   });
 
-  test('Multiple events fire on target', () => {
+  test('A single listener observes multiple events until removed', () => {
     const eventTarget = document.getElementById('list-1')!;
 
     let eventFireCount = 0;
@@ -129,7 +122,7 @@ describe('enhanced-event-listener', () => {
     expect(eventFireCount).toBe(4);
   });
 
-  test('Click event fires on multiple targets', () => {
+  test('A single listener observes an event on multiple targets until removed', () => {
     const targets = [
       document.getElementById('list-1')!,
       document.getElementById('list-2')!,
@@ -157,7 +150,7 @@ describe('enhanced-event-listener', () => {
     expect(eventFireCount).toBe(2 * targets.length);
   });
 
-  test('Click event fires on multiple targets (defined as NodeList)', () => {
+  test('A single listener observes an event on multiple targets (defined as NodeList) until removed', () => {
     const targets = document.querySelectorAll('.list')!;
     let eventFireCount = 0;
 
@@ -182,7 +175,7 @@ describe('enhanced-event-listener', () => {
     expect(eventFireCount).toBe(2 * targets.length);
   });
 
-  test('Delegated click event fires', () => {
+  test('A listener observes an event on the target\'s descendant with a delegate selector until removed', () => {
     const delegateTarget = document.getElementById('list-1')!;
     const listItems = delegateTarget.querySelectorAll('.list-item');
 
@@ -275,7 +268,8 @@ describe('enhanced-event-listener', () => {
     fireEvent(delegateTarget.children[0].children[0], 'click', 1);
     expect(fireCount).toBe(2);
   });
-  test('Capture is supported', () => {
+
+  test('`capture` option is forwarded to EventTarget.addEventListener', () => {
     const originalAddListener = window.addEventListener;
     const addListenerMock = jest.fn(window.addEventListener);
     window.addEventListener = addListenerMock;
@@ -312,10 +306,10 @@ describe('enhanced-event-listener', () => {
     window.addEventListener = originalAddListener;
   });
 
-  test('Passive events are supported', () => {
-    // Unfortunately it seems like jsdom does not support e.defaultPrevented correctly - it will be
-    // false after preventing an event if passive was not used, so the argument to
-    // window.addEventListener is checked instead.
+  test('`passive` option is forwarded to EventTarget.addEventListener', () => {
+    // It suffices to test that the correct parameter is passed to EventTarget.addEventListener,
+    // it's also not possible to test it otherwise at the moment as it seems like
+    // e.defaultPrevented is always false in jsdom.
 
     const originalAddListener = window.addEventListener;
     const addListenerMock = jest.fn(window.addEventListener);
