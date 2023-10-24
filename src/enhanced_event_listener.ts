@@ -2,15 +2,6 @@ import matchesSelector from 'matches-selector';
 
 import { detectEventListener } from 'detect-event-listener';
 
-/**
- * The third argument for addEventListener
- */
-type EventListenerArg = boolean | {
-  capture: boolean
-  once?: boolean
-  passive?: boolean
-}
-
 export interface Options {
   /**
    * Event target or an array of event targets
@@ -53,81 +44,39 @@ export interface Options {
 
 }
 
-const optionSupport = detectEventListener();
-
 /**
- * A helper for addEventListener that supports multiple targets, event names and delegated events.
- *
- * Usage:
- *   Attach event listener: let listener = new EnhancedEventListener(options);
- *   Detach event: listener.off()
+ * The third argument for addEventListener
  */
-export class EnhancedEventListener {
-  private events : Array<string>;
+type EventListenerArg = boolean | {
+  capture: boolean
+  once?: boolean
+  passive?: boolean
+}
 
-  private delegateSelector : string | false;
+const optionsSupport_ = detectEventListener();
 
-  private targets : Array<EventTarget> | null;
-
-  private callback : Options['callback'] | null;
-
-  /**
-   * The third argument for addEventListener / removeEventListener
-   */
-  private eventListenerArg : EventListenerArg = false;
-
-  constructor(options: Options) {
-    if (Array.isArray(options.target)) {
-      this.targets = [...options.target];
-    }
-    else if (options.target instanceof NodeList) {
-      // TODO: Ensure it works with ES5 target
-      // Convert NodeList to Array so there are no doubts on iteration and backward compatibility
-      this.targets = Array.from(options.target);
-    }
-    else {
-      this.targets = [options.target as EventTarget];
-    }
-
-    this.events = options.eventName.split(' ');
-    this.delegateSelector = (options.delegate) ? options.delegate.selector : false;
-    this.callback = options.callback;
-
-    this.setEventListenerArg(options);
-
-    this.addListeners();
+function getEventListenerArg(constructorOptions: Options): EventListenerArg {
+  if (!optionsSupport_.supportsOptions) {
+    // If options not supported, use the old schema with boolean useCapture as the third parameter
+    return !!constructorOptions.capture;
   }
 
-  /**
-   * Removes all event listeners attached.
-   */
-  public off() : void {
-    if (this.targets === null || this.callback === null) {
-      return;
-    }
+  const eventListenerArg: EventListenerArg = {
+    capture: !!constructorOptions.capture,
+  };
 
-    this.removeAllListeners();
-
-    this.targets = null;
-    this.callback = null;
-    this.eventListenerArg = false;
+  if (typeof constructorOptions.passive !== 'undefined' && optionsSupport_.supportsPassive) {
+    eventListenerArg.passive = constructorOptions.passive;
   }
 
-  /**
-   * Adds an event listener for each target and event name supplied.
-   */
-  private addListeners() {
-    if (this.targets === null) {
-      throw new Error('Property target is null');
-    }
-    this.targets.forEach((target) => {
-      this.events.forEach((eventName) => {
-        target.addEventListener(eventName, this.eventListenerCallback, this.eventListenerArg);
-      });
-    });
-  }
+  return eventListenerArg;
+}
 
-  private eventListenerCallback = (e: Event) : void => {
+function createCallback(
+  callback: (this: EventTarget, e: Event) => void,
+  delegateSelector: string | false,
+) {
+  return (e: Event) => {
     // XXX: Could it ever eveluate as true?
     if (e.target === null || e.currentTarget === null) {
       return;
@@ -139,8 +88,8 @@ export class EnhancedEventListener {
     // The event target which is the source of the event
     const eventSource = e.target;
 
-    if (!this.delegateSelector) {
-      this.callback!.call(listenerTarget, e);
+    if (!delegateSelector) {
+      callback.call(listenerTarget, e);
       return;
     }
 
@@ -149,38 +98,54 @@ export class EnhancedEventListener {
 
       // Traverse the dom up fron the event source and check if any element matches the selector
       while (currentNode !== listenerTarget && currentNode !== null) {
-        if (matchesSelector(currentNode, this.delegateSelector)) {
-          this.callback!.call(currentNode, e);
+        if (matchesSelector(currentNode, delegateSelector)) {
+          callback.call(currentNode, e);
         }
         currentNode = currentNode.parentNode;
       }
     }
   };
+}
 
-  private removeAllListeners() {
-    if (this.targets === null) {
-      throw new Error('Property target is null');
-    }
-    this.targets.forEach((target) => {
-      this.events.forEach((eventName) => {
-        target.removeEventListener(eventName, this.eventListenerCallback, this.eventListenerArg);
+/**
+ * A wrapper to EventTarget.addEventListener that supports multiple targets, event names and
+ * delegated events.
+ *
+ * @returns an unsubscribe function to remove all listeners that were attached
+ */
+export function addListener(options: Options): () => void {
+  const events = options.eventName.split(' ');
+
+  const delegateSelector = options.delegate ? options.delegate.selector : false;
+
+  let targets : Array<EventTarget>;
+
+  if (Array.isArray(options.target)) {
+    targets = [...options.target];
+  }
+  else if (options.target instanceof NodeList) {
+    // Convert NodeList to Array so there are no doubts on iteration and backward compatibility
+    targets = Array.from(options.target);
+  }
+  else {
+    targets = [options.target as EventTarget];
+  }
+
+  const eventListenerArg = getEventListenerArg(options);
+
+  const callback = createCallback(options.callback, delegateSelector);
+
+  targets.forEach((target) => {
+    events.forEach((eventName) => {
+      target.addEventListener(eventName, callback, eventListenerArg);
+    });
+  });
+
+  return () => {
+    targets.forEach((target) => {
+      events.forEach((eventName) => {
+        target.removeEventListener(eventName, callback, eventListenerArg);
       });
     });
-  }
-
-  private setEventListenerArg(constructorOptions: Options): void {
-    if (!optionSupport.supportsOptions) {
-      // If options not supported, use the old schema with boolean useCapture as the third parameter
-      this.eventListenerArg = !!constructorOptions.capture;
-      return;
-    }
-
-    this.eventListenerArg = {
-      capture: !!constructorOptions.capture,
-    };
-
-    if (typeof constructorOptions.passive !== 'undefined' && optionSupport.supportsPassive) {
-      this.eventListenerArg.passive = constructorOptions.passive;
-    }
-  }
+  };
 }

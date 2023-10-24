@@ -1,4 +1,4 @@
-import { EnhancedEventListener } from '../src/enhanced_event_listener';
+import { addListener } from '../src/enhanced_event_listener';
 
 const listItemCount = 4;
 
@@ -50,7 +50,7 @@ describe('enhanced-event-listener', () => {
     // Number of test rounds for the event dispatch
     const rounds = 2;
 
-    const listener = new EnhancedEventListener({
+    const removeListener = addListener({
       target: eventTarget,
       eventName: 'click',
       callback() {
@@ -67,7 +67,7 @@ describe('enhanced-event-listener', () => {
     expect(callbackThisContext).toBe(eventTarget);
 
     // Expect the callback has not fired after listener is detached
-    listener.off();
+    removeListener();
     fireEvent(inputTarget, 'click', 1);
     expect(eventFireCount).toBe(rounds);
   });
@@ -78,7 +78,7 @@ describe('enhanced-event-listener', () => {
     let listener1FireCount = 0;
     let listener2FireCount = 0;
 
-    const listener1 = new EnhancedEventListener({
+    const removeListener1 = addListener({
       target: eventTarget,
       eventName: 'click',
       callback: () => {
@@ -86,7 +86,7 @@ describe('enhanced-event-listener', () => {
       },
     });
 
-    const listener2 = new EnhancedEventListener({
+    const removeListener2 = addListener({
       target: eventTarget,
       eventName: 'click',
       callback: () => {
@@ -98,11 +98,11 @@ describe('enhanced-event-listener', () => {
     expect(listener1FireCount).toBe(1);
     expect(listener2FireCount).toBe(1);
 
-    listener1.off();
+    removeListener1();
     fireEvent(eventTarget, 'click', 1);
     expect(listener1FireCount).toBe(1);
     expect(listener2FireCount).toBe(2);
-    listener2.off();
+    removeListener2();
     fireEvent(eventTarget, 'click', 1);
     expect(listener2FireCount).toBe(2);
   });
@@ -112,7 +112,7 @@ describe('enhanced-event-listener', () => {
 
     let eventFireCount = 0;
 
-    const listener = new EnhancedEventListener({
+    const removeListener = addListener({
       target: eventTarget,
       eventName: 'mousedown click',
       callback: () => {
@@ -126,7 +126,7 @@ describe('enhanced-event-listener', () => {
     expect(eventFireCount).toBe(4);
 
     // Expect the callback has not fired after listener is detached
-    listener.off();
+    removeListener();
     fireEvent(eventTarget, 'mousedown', 1);
     fireEvent(eventTarget, 'click', 1);
     expect(eventFireCount).toBe(4);
@@ -139,7 +139,7 @@ describe('enhanced-event-listener', () => {
     ];
     let eventFireCount = 0;
 
-    const listener = new EnhancedEventListener({
+    const removeListener = addListener({
       target: targets,
       eventName: 'click',
       callback: () => {
@@ -153,7 +153,7 @@ describe('enhanced-event-listener', () => {
     expect(eventFireCount).toBe(2 * targets.length);
 
     // Expect listener is properly removed
-    listener.off();
+    removeListener();
     targets.forEach((target) => {
       fireEvent(target, 'click', 1);
     });
@@ -164,7 +164,7 @@ describe('enhanced-event-listener', () => {
     const targets = document.querySelectorAll('.list')!;
     let eventFireCount = 0;
 
-    const listener = new EnhancedEventListener({
+    const removeListener = addListener({
       target: targets,
       eventName: 'click',
       callback: () => {
@@ -178,7 +178,7 @@ describe('enhanced-event-listener', () => {
     expect(eventFireCount).toBe(2 * targets.length);
 
     // Expect listener is properly removed
-    listener.off();
+    removeListener();
     targets.forEach((target) => {
       fireEvent(target, 'click', 1);
     });
@@ -187,7 +187,7 @@ describe('enhanced-event-listener', () => {
 
   // TODO: passive events (expect an error to be thrown when calling e.preventDefault())
   // test('Passive events', () => {
-  //   const listener = new EnhancedEventListener({
+  //   const removeListener = addListener({
   //     target: window,
   //     eventName: 'touchmove',
   //     callback: (e: Event) => {
@@ -208,7 +208,7 @@ describe('enhanced-event-listener', () => {
     let parentFireCount = 0;
     let childFireCount = 0;
 
-    const parentListener = new EnhancedEventListener({
+    const removeParentListener = addListener({
       target: delegateTarget,
       eventName: 'click',
       callback: () => {
@@ -216,7 +216,7 @@ describe('enhanced-event-listener', () => {
       },
     });
 
-    const delegateListener = new EnhancedEventListener({
+    const removeDelegateListener = addListener({
       target: delegateTarget,
       eventName: 'click',
       callback: () => {
@@ -241,8 +241,8 @@ describe('enhanced-event-listener', () => {
     expect(childFireCount).toBe(4);
 
     // Test that all listeners were properly removed
-    parentListener.off();
-    delegateListener.off();
+    removeParentListener();
+    removeDelegateListener();
 
     fireEvent(delegateTarget, 'click', 1);
     fireEvent(listItems[0], 'click', 2);
