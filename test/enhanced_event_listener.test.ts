@@ -37,7 +37,7 @@ beforeAll(setUpDOM);
 // TODO: Test event properties and this arguments. How event targets are going to work with
 // delegated events?
 
-describe('Test EnhancedEventListener', () => {
+describe('enhanced-event-listener', () => {
   test('Click event fires on target and is removed properly', () => {
     // The target which the event is bound too
     const eventTarget = document.getElementById('list-1')!;
@@ -55,6 +55,7 @@ describe('Test EnhancedEventListener', () => {
       eventName: 'click',
       callback() {
         eventFireCount += 1;
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
         callbackThisContext = this;
       },
     });

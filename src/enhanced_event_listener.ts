@@ -155,7 +155,7 @@ export class EnhancedEventListener {
         currentNode = currentNode.parentNode;
       }
     }
-  }
+  };
 
   private removeAllListeners() {
     if (this.targets === null) {
