@@ -185,19 +185,47 @@ describe('enhanced-event-listener', () => {
     expect(eventFireCount).toBe(2 * targets.length);
   });
 
-  // TODO: passive events (expect an error to be thrown when calling e.preventDefault())
-  // test('Passive events', () => {
-  //   const removeListener = addListener({
-  //     target: window,
-  //     eventName: 'touchmove',
-  //     callback: (e: Event) => {
-  //       e.preventDefault();
-  //     },
-  //     passive: true,
-  //   });
+  test('passive events are supported', () => {
+    // Unfortunately it seems like jsdom does not support e.defaultPrevented correctly - it will be
+    // false after preventing an event if passive was not used, so the argument to
+    // window.addEventListener is checked instead.
 
-  //   fireEvent(window, 'touchmove', 1);
-  // });
+    const originalAddListener = window.addEventListener;
+    const addListenerMock = jest.fn(window.addEventListener);
+    window.addEventListener = addListenerMock;
+
+    const removeListener = addListener({
+      target: window,
+      eventName: 'touchmove',
+      callback: () => { },
+      passive: false,
+    });
+
+    fireEvent(window, 'touchmove', 1);
+
+    let addListenerArg = addListenerMock.mock.calls[0][2] as { passive?: boolean };
+
+    expect(!!addListenerArg.passive).toBe(false);
+
+    removeListener();
+
+    const removePassiveListener = addListener({
+      target: window,
+      eventName: 'touchmove',
+      callback: () => { },
+      passive: true,
+    });
+
+    fireEvent(window, 'touchmove', 1);
+
+    addListenerArg = addListenerMock.mock.calls[1][2] as { passive: boolean };
+
+    expect(addListenerArg.passive).toBe(true);
+
+    removePassiveListener();
+
+    window.addEventListener = originalAddListener;
+  });
 
   // TODO: use capture
 
