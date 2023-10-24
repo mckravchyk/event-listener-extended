@@ -72,39 +72,36 @@ describe('enhanced-event-listener', () => {
     expect(eventFireCount).toBe(rounds);
   });
 
-  test('2 identical listeners do not collide', () => {
+  test('2 identical listeners sharing the same callback do not collide', () => {
     const eventTarget = document.getElementById('list-1')!;
 
-    let listener1FireCount = 0;
-    let listener2FireCount = 0;
+    let fireCount = 0;
+
+    // The native addEventListener will ignore another listener with the same event name and a
+    // callback function - this library will not.
+    const callback = () => { fireCount += 1; };
 
     const removeListener1 = addListener({
       target: eventTarget,
       eventName: 'click',
-      callback: () => {
-        listener1FireCount += 1;
-      },
+      callback,
     });
 
     const removeListener2 = addListener({
       target: eventTarget,
       eventName: 'click',
-      callback: () => {
-        listener2FireCount += 1;
-      },
+      callback,
     });
 
     fireEvent(eventTarget, 'click', 1);
-    expect(listener1FireCount).toBe(1);
-    expect(listener2FireCount).toBe(1);
+    expect(fireCount).toBe(2);
 
     removeListener1();
     fireEvent(eventTarget, 'click', 1);
-    expect(listener1FireCount).toBe(1);
-    expect(listener2FireCount).toBe(2);
+    expect(fireCount).toBe(3);
     removeListener2();
     fireEvent(eventTarget, 'click', 1);
-    expect(listener2FireCount).toBe(2);
+    expect(fireCount).toBe(3);
   });
 
   test('Multiple events fire on target', () => {
