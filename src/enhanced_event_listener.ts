@@ -3,16 +3,13 @@ import matchesSelector from 'matches-selector';
 import { detectEventListener } from 'detect-event-listener';
 
 export interface Options {
-  /**
-   * Event target or an array of event targets
-   */
-  target: EventTarget | Array<EventTarget> | NodeList
+  target: EventTarget | EventTarget[] | NodeList
 
   /**
-   * Event name to bind. It's possible to pass multiple event names, separated by space.
-   * E.g. "touchstart mousedown"
+   * A single event name, multiple event names separated by space or an array of event names to
+   * listen to.
    */
-  eventName: string
+  eventName: string | string[]
 
   callback(this: EventTarget, e: Event) : void;
 
@@ -24,8 +21,8 @@ export interface Options {
   }
 
   /**
-   * A Boolean indicating that events of this type will be dispatched to the registered
-   * listener before being dispatched to any EventTarget beneath it in the DOM tree.
+   * If enabled, events of this type will be dispatched to the registered listener before being
+   * dispatched to any EventTarget beneath it in the DOM tree.
    */
   capture?: boolean
 
@@ -133,7 +130,14 @@ function createCallback(
  * @returns an unsubscribe function to remove all listeners that were attached
  */
 export function addListener(options: Options): () => void {
-  const events = options.eventName.split(' ');
+  let events: string[] = [];
+
+  if (Array.isArray(options.eventName)) {
+    events = options.eventName;
+  }
+  else {
+    events = options.eventName.split(' ').filter((e) => e !== '');
+  }
 
   const delegateSelector = options.delegate ? options.delegate.selector : false;
 

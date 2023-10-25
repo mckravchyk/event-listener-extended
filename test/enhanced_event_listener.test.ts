@@ -1,6 +1,6 @@
 import { addListener } from '../src/enhanced_event_listener';
 
-const listItemCount = 4;
+const LIST_ITEM_COUNT = 4;
 
 /**
  * Emits `eventName` on `target` `count` times
@@ -14,7 +14,7 @@ function fireEvent(target: EventTarget, eventName: string, count = 1): void {
 function setUpDOM() {
   let liItems = '';
 
-  for (let i = 0; i < listItemCount; i += 1) {
+  for (let i = 0; i < LIST_ITEM_COUNT; i += 1) {
     liItems += `<li class="list-item" data-index="${i}">Item ${i}</li>`;
   }
 
@@ -37,7 +37,7 @@ describe('enhanced-event-listener', () => {
     // A child node of the event target - the event will be fired on the child node
     const inputTarget = eventTarget.childNodes[0];
 
-    let eventFireCount = 0;
+    let fireCount = 0;
     let callbackThisContext: EventTarget | null = null;
 
     // Number of test rounds for the event dispatch
@@ -47,7 +47,7 @@ describe('enhanced-event-listener', () => {
       target: eventTarget,
       eventName: 'click',
       callback() {
-        eventFireCount += 1;
+        fireCount += 1;
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         callbackThisContext = this;
       },
@@ -55,14 +55,14 @@ describe('enhanced-event-listener', () => {
 
     // Fire the event on a child node of the target
     fireEvent(inputTarget, 'click', rounds);
-    expect(eventFireCount).toBe(rounds);
+    expect(fireCount).toBe(rounds);
     // This context of the callback has to be eventTarget (despite being fired on a child node)
     expect(callbackThisContext).toBe(eventTarget);
 
     // Expect the callback has not fired after listener is detached
     removeListener();
     fireEvent(inputTarget, 'click', 1);
-    expect(eventFireCount).toBe(rounds);
+    expect(fireCount).toBe(rounds);
   });
 
   test('2 identical listeners sharing the same callback do not collide', () => {
@@ -100,26 +100,53 @@ describe('enhanced-event-listener', () => {
   test('A single listener observes multiple events until removed', () => {
     const eventTarget = document.getElementById('list-1')!;
 
-    let eventFireCount = 0;
+    let fireCount = 0;
 
     const removeListener = addListener({
       target: eventTarget,
-      eventName: 'mousedown click',
+      eventName: ['mousedown', 'click'],
       callback: () => {
-        eventFireCount += 1;
+        fireCount += 1;
       },
     });
 
     fireEvent(eventTarget, 'mousedown', 2);
     fireEvent(eventTarget, 'click', 2);
 
-    expect(eventFireCount).toBe(4);
+    expect(fireCount).toBe(4);
 
     // Expect the callback has not fired after listener is detached
     removeListener();
     fireEvent(eventTarget, 'mousedown', 1);
     fireEvent(eventTarget, 'click', 1);
-    expect(eventFireCount).toBe(4);
+    expect(fireCount).toBe(4);
+  });
+
+  test('`eventName` option accepts a string of space-separated event names', () => {
+    const eventTarget = document.getElementById('list-1')!;
+
+    let fireCount = 0;
+
+    const removeListener = addListener({
+      target: eventTarget,
+      eventName: 'mousedown click  mouseup', // Intended double space before mouseup
+      callback: () => {
+        fireCount += 1;
+      },
+    });
+
+    fireEvent(eventTarget, 'mousedown', 2);
+    fireEvent(eventTarget, 'click', 2);
+    fireEvent(eventTarget, 'mouseup', 2);
+
+    expect(fireCount).toBe(6);
+
+    // Expect the callback has not fired after listener is detached
+    removeListener();
+    fireEvent(eventTarget, 'mousedown', 1);
+    fireEvent(eventTarget, 'click', 1);
+    fireEvent(eventTarget, 'mouseup', 1);
+    expect(fireCount).toBe(6);
   });
 
   test('A single listener observes an event on multiple targets until removed', () => {
@@ -127,52 +154,52 @@ describe('enhanced-event-listener', () => {
       document.getElementById('list-1')!,
       document.getElementById('list-2')!,
     ];
-    let eventFireCount = 0;
+    let fireCount = 0;
 
     const removeListener = addListener({
       target: targets,
       eventName: 'click',
       callback: () => {
-        eventFireCount += 1;
+        fireCount += 1;
       },
     });
 
     targets.forEach((target) => {
       fireEvent(target, 'click', 2);
     });
-    expect(eventFireCount).toBe(2 * targets.length);
+    expect(fireCount).toBe(2 * targets.length);
 
     // Expect listener is properly removed
     removeListener();
     targets.forEach((target) => {
       fireEvent(target, 'click', 1);
     });
-    expect(eventFireCount).toBe(2 * targets.length);
+    expect(fireCount).toBe(2 * targets.length);
   });
 
   test('A single listener observes an event on multiple targets (defined as NodeList) until removed', () => {
     const targets = document.querySelectorAll('.list')!;
-    let eventFireCount = 0;
+    let fireCount = 0;
 
     const removeListener = addListener({
       target: targets,
       eventName: 'click',
       callback: () => {
-        eventFireCount += 1;
+        fireCount += 1;
       },
     });
 
     targets.forEach((target) => {
       fireEvent(target, 'click', 2);
     });
-    expect(eventFireCount).toBe(2 * targets.length);
+    expect(fireCount).toBe(2 * targets.length);
 
     // Expect listener is properly removed
     removeListener();
     targets.forEach((target) => {
       fireEvent(target, 'click', 1);
     });
-    expect(eventFireCount).toBe(2 * targets.length);
+    expect(fireCount).toBe(2 * targets.length);
   });
 
   test('A listener observes an event on the target\'s descendant with a delegate selector until removed', () => {
