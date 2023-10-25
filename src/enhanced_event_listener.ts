@@ -20,12 +20,14 @@ export interface Options {
   capture?: boolean
 
   /**
-   * Passive event listeners cannot call e.preventDefault()
-   * If not set, the argument will not be passed to addEventListener()
+   * Whether to make the listener passive - not able to prevent default - which is a performance
+   * optimization for frequently-firing events.
    *
-   * This option can be used to override browser defaulting some events
-   * such as touchmove to be passive
-   * https://developers.google.com/web/updates/2017/01/scrolling-intervention
+   * If not set, the argument is not passed to the native EventTarget.addEventListener which lets
+   * the browser decide whether to enable it. For example, Chromium will enable passive by default
+   * on a touchmove listener attached to the window, body or document [0]
+   *
+   * [0] https://developers.google.com/web/updates/2017/01/scrolling-intervention
    */
   passive?: boolean
 

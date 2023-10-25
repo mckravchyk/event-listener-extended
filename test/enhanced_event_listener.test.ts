@@ -389,33 +389,37 @@ describe('enhanced-event-listener', () => {
   });
 
   test('`passive` option is forwarded to EventTarget.addEventListener', () => {
-    // It suffices to test that the correct parameter is passed to EventTarget.addEventListener,
-    // it's also not possible to test it otherwise at the moment as it seems like
-    // e.defaultPrevented is always false in jsdom.
+    // It's not possible to test the behaviour at the moment since e.defaultPrevented seems to be
+    // always false in jsodom, even on non-passive. Either way, it's more important to test that
+    // the parameter is passed (or not passed) so handling the default can be left to the
+    // browsers.
 
     const originalAddListener = window.addEventListener;
     const addListenerMock = jest.fn(window.addEventListener);
     window.addEventListener = addListenerMock;
 
-    const removeListener = addListener({
+    addListener({
       target: window,
       eventName: 'touchmove',
       callback: () => { },
+      once: true,
     });
 
     fireEvent(window, 'touchmove', 1);
 
     let addListenerArg = addListenerMock.mock.calls[0][2] as { passive?: boolean };
 
-    expect(!!addListenerArg.passive).toBe(false);
+    // It must not be false since it would interfere with browser vendor optimizations to enable
+    // passive by default for certain event / event targets combinations.
+    expect(addListenerArg.passive).not.toBe(false);
+    expect(addListenerArg.passive).toBe(undefined);
 
-    removeListener();
-
-    const removePassiveListener = addListener({
+    addListener({
       target: window,
       eventName: 'touchmove',
       callback: () => { },
       passive: true,
+      once: true,
     });
 
     fireEvent(window, 'touchmove', 1);
@@ -423,8 +427,6 @@ describe('enhanced-event-listener', () => {
     addListenerArg = addListenerMock.mock.calls[1][2] as { passive: boolean };
 
     expect(addListenerArg.passive).toBe(true);
-
-    removePassiveListener();
 
     window.addEventListener = originalAddListener;
   });
