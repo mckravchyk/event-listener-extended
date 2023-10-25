@@ -14,13 +14,6 @@ export interface Options {
   callback(this: EventTarget, e: Event) : void;
 
   /**
-   * Delegate the event to target's child nodes that match the selector.
-   */
-  delegate?: {
-    selector: string
-  }
-
-  /**
    * If enabled, events of this type will be dispatched to the registered listener before being
    * dispatched to any EventTarget beneath it in the DOM tree.
    */
@@ -44,6 +37,19 @@ export interface Options {
    * lineage of target's descendants, the listener will still fire for each matched node.
    */
   once?: boolean
+
+  /**
+   * A selector string to match target's descendant(s) that will be observed. Enabling this will
+   * not call the listener on the target but the descendant node(s) that match the selector instead.
+   *
+   * This can be useful when there are many nodes to observe or the nodes to observe do not exist
+   * yet - rather than adding a listener for each, one listener set at the ancestor can observe
+   * them all.
+   *
+   * It requires some extra processing when the event is fired so it's not recommended to
+   * use for events that have the potential to fire frequently like pointerin, scroll, etc.
+   */
+  delegateSelector?: string | false
 }
 
 /**
@@ -76,8 +82,8 @@ function getEventListenerArg(constructorOptions: Options): EventListenerArg {
 
 function createCallback(
   callback: (this: EventTarget, e: Event) => void,
-  delegateSelector: string | false,
   unsubscribe: { unsubscribe?: () => void },
+  delegateSelector?: string | false,
 ) {
   return (e: Event) => {
     if (e.target === null || e.currentTarget === null) {
@@ -139,8 +145,6 @@ export function addListener(options: Options): () => void {
     events = options.eventName.split(' ').filter((e) => e !== '');
   }
 
-  const delegateSelector = options.delegate ? options.delegate.selector : false;
-
   let targets : Array<EventTarget>;
 
   if (Array.isArray(options.target)) {
@@ -160,7 +164,7 @@ export function addListener(options: Options): () => void {
   // updated or having the callback refer itself / closure inside createCallback.
   const unsubscribeContainer: { unsubscribe?: () => void } = { };
 
-  const callback = createCallback(options.callback, delegateSelector, unsubscribeContainer);
+  const callback = createCallback(options.callback, unsubscribeContainer, options.delegateSelector);
 
   const unsubscribe = () => {
     targets.forEach((target) => {

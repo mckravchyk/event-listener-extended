@@ -223,9 +223,7 @@ describe('enhanced-event-listener', () => {
       callback: () => {
         childFireCount += 1;
       },
-      delegate: {
-        selector: '.list-item',
-      },
+      delegateSelector: '.list-item',
     });
 
     // Trigger click event on the parent, expect that the parent listener fired, but the child did
@@ -285,7 +283,7 @@ describe('enhanced-event-listener', () => {
       callback: () => {
         fireCount += 1;
       },
-      delegate: { selector: '.list, .list-item' },
+      delegateSelector: '.list, .list-item',
 
       // This is not just for convenience - once should not affect this behaviour - the listener
       // should still fire for each match in the same target / event combination.
