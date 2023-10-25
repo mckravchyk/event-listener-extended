@@ -111,7 +111,7 @@ function createCallback(
       let currentNode: Node | null = eventSource;
       let matchFound = false;
 
-      // Traverse the dom up fron the event source and check if any element matches the selector
+      // Go up from the event source and check if any element matches the selector
       while (currentNode !== listenerTarget && currentNode !== null) {
         if (matchesSelector(currentNode, delegateSelector)) {
           callback.call(currentNode, e);

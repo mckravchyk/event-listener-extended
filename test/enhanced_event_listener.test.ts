@@ -294,6 +294,63 @@ describe('enhanced-event-listener', () => {
     expect(fireCount).toBe(2);
   });
 
+  test('A listener has the event target as the this keyword and retains original e.target, e.currentTarget', () => {
+    const listenerTarget = document.getElementById('container')!;
+
+    // The first list item in the first list
+    const eventTarget = listenerTarget.children[0].children[0];
+
+    let currentTargetValue: HTMLElement | null = null;
+    let thisValue: HTMLElement | null = null;
+    let targetValue: HTMLElement | null = null;
+
+    addListener({
+      target: listenerTarget,
+      eventName: 'click',
+      callback(e) {
+        currentTargetValue = e.currentTarget as HTMLElement;
+        thisValue = this as HTMLElement;
+        targetValue = e.target as HTMLElement;
+      },
+      once: true,
+    });
+
+    fireEvent(eventTarget, 'click', 1);
+
+    expect(currentTargetValue).toBe(listenerTarget);
+    expect(thisValue).toBe(listenerTarget);
+    expect(targetValue).toBe(eventTarget);
+  });
+
+  test('A delegated listener has the matched node as the this keyword and retains original e.target, e.currentTarget', () => {
+    const listenerTarget = document.getElementById('container')!;
+
+    // The first list item in the first list
+    const eventTarget = listenerTarget.children[0].children[0];
+
+    let currentTargetValue: HTMLElement | null = null;
+    let thisValue: HTMLElement | null = null;
+    let targetValue: HTMLElement | null = null;
+
+    addListener({
+      target: listenerTarget,
+      eventName: 'click',
+      callback(e) {
+        currentTargetValue = e.currentTarget as HTMLElement;
+        thisValue = this as HTMLElement;
+        targetValue = e.target as HTMLElement;
+      },
+      delegateSelector: '.list',
+      once: true,
+    });
+
+    fireEvent(eventTarget, 'click', 1);
+
+    expect(currentTargetValue).toBe(listenerTarget);
+    expect(thisValue).toBe(listenerTarget.children[0]);
+    expect(targetValue).toBe(eventTarget);
+  });
+
   test('`capture` option is forwarded to EventTarget.addEventListener', () => {
     const originalAddListener = window.addEventListener;
     const addListenerMock = jest.fn(window.addEventListener);
