@@ -175,7 +175,7 @@ describe('General', () => {
     expect(fireCount).toBe(4 * targets.length);
   });
 
-  test('A listener observes an event on the target\'s descendant with a delegate selector until removed', () => {
+  test('A delegate listener observes an event on the target\'s descendants until removed', () => {
     const delegateTarget = document.getElementById('list-1')!;
     const listItems = delegateTarget.querySelectorAll('.list-item');
 
@@ -222,6 +222,40 @@ describe('General', () => {
 
     expect(parentFireCount).toBe(5);
     expect(childFireCount).toBe(4);
+  });
+
+  test('A delegate listener observes an event on multiple target\'s descendants', () => {
+    const target1 = document.getElementById('list-1')!;
+    const target2 = document.getElementById('list-2')!;
+    const listItems1 = target1.querySelectorAll('.list-item');
+    const listItems2 = target2.querySelectorAll('.list-item');
+
+    const result: string[] = [];
+
+    const removeListener = addListener({
+      target: [target1, target2],
+      eventName: 'click',
+      callback() {
+        const node = this as HTMLElement;
+        const parentId = (node.parentNode! as HTMLElement).id;
+        result.push(`${parentId}-${node.dataset.index}`);
+      },
+      delegateSelector: '.list-item',
+    });
+
+    fireEvent(listItems1[0], 'click', 2);
+    fireEvent(listItems1[1], 'click', 2);
+    fireEvent(listItems2[0], 'click', 2);
+    fireEvent(listItems2[1], 'click', 2);
+
+    expect(result).toEqual([
+      'list-1-0', 'list-1-0',
+      'list-1-1', 'list-1-1',
+      'list-2-0', 'list-2-0',
+      'list-2-1', 'list-2-1',
+    ]);
+
+    removeListener();
   });
 });
 
