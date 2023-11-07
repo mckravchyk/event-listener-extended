@@ -1,7 +1,7 @@
 {
   "name": "event-listener-extended",
   "version": "0.0.1",
-  "description": "A helper for addEventListener that supports multiple targets, event names and delegated events.",
+  "description": "A wrapper to EventTarget.addEventListener that supports multiple targets, event names and delegated events with a convenient remove listener mechanism.",
   "author": "Maciej Krawczyk",
   "homepage": "https://github.com/mckravchyk/event-listener-extended",
   "license": "MIT",
