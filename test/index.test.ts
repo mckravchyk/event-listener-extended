@@ -1,5 +1,7 @@
 import { addListener } from 'src';
 
+/* eslint-disable @typescript-eslint/no-this-alias */
+
 const LIST_ITEM_COUNT = 4;
 
 /**
@@ -48,7 +50,6 @@ describe('General', () => {
       eventName: 'click',
       callback() {
         fireCount += 1;
-        // eslint-disable-next-line @typescript-eslint/no-this-alias
         callbackThisContext = this;
       },
     });
@@ -236,9 +237,8 @@ describe('General', () => {
       target: [target1, target2],
       eventName: 'click',
       callback() {
-        const node = this as HTMLElement;
-        const parentId = (node.parentNode! as HTMLElement).id;
-        result.push(`${parentId}-${node.dataset.index}`);
+        const parentId = (this.parentNode! as HTMLElement).id;
+        result.push(`${parentId}-${this.dataset.index}`);
       },
       delegateSelector: '.list-item',
     });
@@ -328,7 +328,7 @@ describe('Behavior', () => {
       eventName: 'click',
       callback(e) {
         currentTargetValue = e.currentTarget as HTMLElement;
-        thisValue = this as HTMLElement;
+        thisValue = this;
         targetValue = e.target as HTMLElement;
       },
       once: true,
@@ -356,7 +356,7 @@ describe('Behavior', () => {
       eventName: 'click',
       callback(e) {
         currentTargetValue = e.currentTarget as HTMLElement;
-        thisValue = this as HTMLElement;
+        thisValue = this;
         targetValue = e.target as HTMLElement;
       },
       delegateSelector: '.list',

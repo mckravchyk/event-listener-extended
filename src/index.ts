@@ -2,8 +2,13 @@ import matchesSelector from 'matches-selector';
 
 import { detectEventListener } from 'detect-event-listener';
 
-export interface Options {
-  target: EventTarget | EventTarget[] | NodeList
+// The conditional is here to use anything that extends HTMLElement as HTMLElement type, so for
+// example, if the target is HTMLTableElement, it's not desirable to have the this keyword as
+// HTMLTableElement when using a delegate selector where the keyword points to a table cell.
+type CallbackThis<Target extends EventTarget> = Target extends HTMLElement ? HTMLElement : Target;
+
+export interface Options<Target extends EventTarget> {
+  target: Target extends Node ? Target | Target[] | NodeListOf<Target> : Target | Target[]
 
   /**
    * A single event name, multiple event names separated by space or an array of event names to
@@ -11,7 +16,7 @@ export interface Options {
    */
   eventName: string | string[]
 
-  callback(this: EventTarget, e: Event) : void;
+  callback(this: CallbackThis<Target>, e: Event) : void;
 
   /**
    * If enabled, events of this type will be dispatched to the registered listener before being
@@ -65,7 +70,9 @@ type EventListenerArg = boolean | {
 
 const optionsSupport_ = detectEventListener();
 
-function getEventListenerArg(constructorOptions: Options): EventListenerArg {
+function getEventListenerArg<Target extends EventTarget>(
+  constructorOptions: Options<Target>,
+): EventListenerArg {
   if (!optionsSupport_.supportsOptions) {
     // If options not supported, use the old schema with boolean useCapture as the third parameter
     return !!constructorOptions.capture;
@@ -137,7 +144,7 @@ function createCallback(
  *
  * @returns an unsubscribe function to remove all listeners that were attached
  */
-export function addListener(options: Options): () => void {
+export function addListener<Target extends EventTarget>(options: Options<Target>): () => void {
   let events: string[] = [];
 
   if (Array.isArray(options.eventName)) {
@@ -166,7 +173,11 @@ export function addListener(options: Options): () => void {
   // updated or having the callback refer itself / closure inside createCallback.
   const unsubscribeContainer: { unsubscribe?: () => void } = { };
 
-  const callback = createCallback(options.callback, unsubscribeContainer, options.delegateSelector);
+  const callback = createCallback(
+    options.callback as (this: EventTarget, e: Event) => void,
+    unsubscribeContainer,
+    options.delegateSelector,
+  );
 
   const unsubscribe = () => {
     targets.forEach((target) => {
