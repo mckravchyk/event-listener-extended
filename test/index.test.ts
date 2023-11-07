@@ -92,7 +92,7 @@ describe('General', () => {
     expect(detail).toBe('test');
   });
 
-  test('A single listener observes multiple events until removed', () => {
+  test('A listener observes multiple events until removed', () => {
     const eventTarget = document.getElementById('list-1')!;
 
     let fireCount = 0;
@@ -117,7 +117,7 @@ describe('General', () => {
     expect(fireCount).toBe(4);
   });
 
-  test('A single listener observes an event on multiple targets until removed', () => {
+  test('A listener observes an event on multiple targets until removed', () => {
     const targets = [
       document.getElementById('list-1')!,
       document.getElementById('list-2')!,
@@ -143,6 +143,36 @@ describe('General', () => {
       fireEvent(target, 'click', 1);
     });
     expect(fireCount).toBe(2 * targets.length);
+  });
+
+  test('A listener observes multiple events on multiple targets until removed', () => {
+    const targets = [
+      document.getElementById('list-1')!,
+      document.getElementById('list-2')!,
+    ];
+    let fireCount = 0;
+
+    const removeListener = addListener({
+      target: targets,
+      eventName: ['click', 'mousedown'],
+      callback: () => {
+        fireCount += 1;
+      },
+    });
+
+    targets.forEach((target) => {
+      fireEvent(target, 'click', 2);
+      fireEvent(target, 'mousedown', 2);
+    });
+    expect(fireCount).toBe(4 * targets.length);
+
+    // Expect listener is properly removed
+    removeListener();
+    targets.forEach((target) => {
+      fireEvent(target, 'click', 1);
+      fireEvent(target, 'mousedown', 1);
+    });
+    expect(fireCount).toBe(4 * targets.length);
   });
 
   test('A listener observes an event on the target\'s descendant with a delegate selector until removed', () => {
