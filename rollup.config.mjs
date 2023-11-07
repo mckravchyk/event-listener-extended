@@ -21,7 +21,7 @@ const banner = createBanner([
 ]);
 
 const defaults = {
-  input: 'src/enhanced_event_listener.ts',
+  input: 'src/index.ts',
   external: [
     ...Object.keys(pkg.dependencies || {}),
     ...Object.keys(pkg.peerDependencies || {}),

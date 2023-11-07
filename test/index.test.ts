@@ -1,4 +1,4 @@
-import { addListener } from 'src/enhanced_event_listener';
+import { addListener } from 'src';
 
 const LIST_ITEM_COUNT = 4;
 
