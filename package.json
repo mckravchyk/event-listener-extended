@@ -1,13 +1,13 @@
 {
-  "name": "enhanced-event-listener",
+  "name": "event-listener-extended",
   "version": "0.0.1",
   "description": "A helper for addEventListener that supports multiple targets, event names and delegated events.",
   "author": "Maciej Krawczyk",
-  "homepage": "https://github.com/mckravchyk/enhanced-event-listener",
+  "homepage": "https://github.com/mckravchyk/event-listener-extended",
   "license": "MIT",
   "private": true,
-  "main": "./dist/enhanced-event-listener.common.js",
-  "module": "./dist/enhanced-event-listener.esm.js",
+  "main": "./dist/event-listener-extended.common.js",
+  "module": "./dist/event-listener-extended.esm.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "lint": "eslint src test",
