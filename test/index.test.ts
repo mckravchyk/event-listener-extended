@@ -30,7 +30,7 @@ function setUpDOM() {
 
 beforeAll(setUpDOM);
 
-describe('enhanced-event-listener', () => {
+describe('General', () => {
   test('A listener observes an event until removed', () => {
     // The target which the event is bound too
     const eventTarget = document.getElementById('list-1')!;
@@ -65,28 +65,6 @@ describe('enhanced-event-listener', () => {
     expect(fireCount).toBe(rounds);
   });
 
-  test('A listener added with `once` option observes only the first event', () => {
-    // The target which the event is bound too
-    const eventTarget = document.getElementById('list-1')!;
-
-    // A child node of the event target - the event will be fired on the child node
-    const inputTarget = eventTarget.childNodes[0];
-
-    let fireCount = 0;
-
-    addListener({
-      target: eventTarget,
-      eventName: 'mousedown click',
-      callback() { fireCount += 1; },
-      once: true,
-    });
-
-    fireEvent(inputTarget, 'mousedown', 1);
-    expect(fireCount).toBe(1);
-    fireEvent(inputTarget, 'click', 1);
-    expect(fireCount).toBe(1);
-  });
-
   test('A listener observes a custom event', () => {
     // The target which the event is bound too
     const eventTarget = document.getElementById('list-1')!;
@@ -114,38 +92,6 @@ describe('enhanced-event-listener', () => {
     expect(detail).toBe('test');
   });
 
-  test('2 identical listeners sharing the same callback do not collide', () => {
-    const eventTarget = document.getElementById('list-1')!;
-
-    let fireCount = 0;
-
-    // The native addEventListener will ignore another listener with the same event name and a
-    // callback function - this library will not.
-    const callback = () => { fireCount += 1; };
-
-    const removeListener1 = addListener({
-      target: eventTarget,
-      eventName: 'click',
-      callback,
-    });
-
-    const removeListener2 = addListener({
-      target: eventTarget,
-      eventName: 'click',
-      callback,
-    });
-
-    fireEvent(eventTarget, 'click', 1);
-    expect(fireCount).toBe(2);
-
-    removeListener1();
-    fireEvent(eventTarget, 'click', 1);
-    expect(fireCount).toBe(3);
-    removeListener2();
-    fireEvent(eventTarget, 'click', 1);
-    expect(fireCount).toBe(3);
-  });
-
   test('A single listener observes multiple events until removed', () => {
     const eventTarget = document.getElementById('list-1')!;
 
@@ -171,63 +117,11 @@ describe('enhanced-event-listener', () => {
     expect(fireCount).toBe(4);
   });
 
-  test('`eventName` option accepts a string of space-separated event names', () => {
-    const eventTarget = document.getElementById('list-1')!;
-
-    let fireCount = 0;
-
-    const removeListener = addListener({
-      target: eventTarget,
-      eventName: 'mousedown click  mouseup', // Intended double space before mouseup
-      callback: () => {
-        fireCount += 1;
-      },
-    });
-
-    fireEvent(eventTarget, 'mousedown', 2);
-    fireEvent(eventTarget, 'click', 2);
-    fireEvent(eventTarget, 'mouseup', 2);
-
-    expect(fireCount).toBe(6);
-
-    // Expect the callback has not fired after listener is detached
-    removeListener();
-    fireEvent(eventTarget, 'mousedown', 1);
-    fireEvent(eventTarget, 'click', 1);
-    fireEvent(eventTarget, 'mouseup', 1);
-    expect(fireCount).toBe(6);
-  });
-
   test('A single listener observes an event on multiple targets until removed', () => {
     const targets = [
       document.getElementById('list-1')!,
       document.getElementById('list-2')!,
     ];
-    let fireCount = 0;
-
-    const removeListener = addListener({
-      target: targets,
-      eventName: 'click',
-      callback: () => {
-        fireCount += 1;
-      },
-    });
-
-    targets.forEach((target) => {
-      fireEvent(target, 'click', 2);
-    });
-    expect(fireCount).toBe(2 * targets.length);
-
-    // Expect listener is properly removed
-    removeListener();
-    targets.forEach((target) => {
-      fireEvent(target, 'click', 1);
-    });
-    expect(fireCount).toBe(2 * targets.length);
-  });
-
-  test('A single listener observes an event on multiple targets (defined as NodeList) until removed', () => {
-    const targets = document.querySelectorAll('.list')!;
     let fireCount = 0;
 
     const removeListener = addListener({
@@ -298,6 +192,40 @@ describe('enhanced-event-listener', () => {
 
     expect(parentFireCount).toBe(5);
     expect(childFireCount).toBe(4);
+  });
+});
+
+describe('Behavior', () => {
+  test('2 identical listeners sharing the same callback do not collide', () => {
+    const eventTarget = document.getElementById('list-1')!;
+
+    let fireCount = 0;
+
+    // The native addEventListener will ignore another listener with the same event name and a
+    // callback function - this library will not.
+    const callback = () => { fireCount += 1; };
+
+    const removeListener1 = addListener({
+      target: eventTarget,
+      eventName: 'click',
+      callback,
+    });
+
+    const removeListener2 = addListener({
+      target: eventTarget,
+      eventName: 'click',
+      callback,
+    });
+
+    fireEvent(eventTarget, 'click', 1);
+    expect(fireCount).toBe(2);
+
+    removeListener1();
+    fireEvent(eventTarget, 'click', 1);
+    expect(fireCount).toBe(3);
+    removeListener2();
+    fireEvent(eventTarget, 'click', 1);
+    expect(fireCount).toBe(3);
   });
 
   test('A listener with a delegate selector targeting multiple nodes in the same lineage is fired for each matched node', () => {
@@ -377,8 +305,84 @@ describe('enhanced-event-listener', () => {
     expect(thisValue).toBe(listenerTarget.children[0]);
     expect(targetValue).toBe(eventTarget);
   });
+});
 
-  test('`capture` option is forwarded to EventTarget.addEventListener', () => {
+describe('Options', () => {
+  test('`once` makes it observe only the first event', () => {
+    // The target which the event is bound too
+    const eventTarget = document.getElementById('list-1')!;
+
+    // A child node of the event target - the event will be fired on the child node
+    const inputTarget = eventTarget.childNodes[0];
+
+    let fireCount = 0;
+
+    addListener({
+      target: eventTarget,
+      eventName: 'mousedown click',
+      callback() { fireCount += 1; },
+      once: true,
+    });
+
+    fireEvent(inputTarget, 'mousedown', 1);
+    expect(fireCount).toBe(1);
+    fireEvent(inputTarget, 'click', 1);
+    expect(fireCount).toBe(1);
+  });
+
+  test('`eventName` can be a string of space-separated event names (alternative)', () => {
+    const eventTarget = document.getElementById('list-1')!;
+
+    let fireCount = 0;
+
+    const removeListener = addListener({
+      target: eventTarget,
+      eventName: 'mousedown click  mouseup', // Intended double space before mouseup
+      callback: () => {
+        fireCount += 1;
+      },
+    });
+
+    fireEvent(eventTarget, 'mousedown', 2);
+    fireEvent(eventTarget, 'click', 2);
+    fireEvent(eventTarget, 'mouseup', 2);
+
+    expect(fireCount).toBe(6);
+
+    // Expect the callback has not fired after listener is detached
+    removeListener();
+    fireEvent(eventTarget, 'mousedown', 1);
+    fireEvent(eventTarget, 'click', 1);
+    fireEvent(eventTarget, 'mouseup', 1);
+    expect(fireCount).toBe(6);
+  });
+
+  test('`target` can be a NodeList (alternative)', () => {
+    const targets = document.querySelectorAll('.list')!;
+    let fireCount = 0;
+
+    const removeListener = addListener({
+      target: targets,
+      eventName: 'click',
+      callback: () => {
+        fireCount += 1;
+      },
+    });
+
+    targets.forEach((target) => {
+      fireEvent(target, 'click', 2);
+    });
+    expect(fireCount).toBe(2 * targets.length);
+
+    // Expect listener is properly removed
+    removeListener();
+    targets.forEach((target) => {
+      fireEvent(target, 'click', 1);
+    });
+    expect(fireCount).toBe(2 * targets.length);
+  });
+
+  test('`capture` is forwarded to EventTarget.addEventListener', () => {
     const originalAddListener = window.addEventListener;
     const addListenerMock = jest.fn(window.addEventListener);
     window.addEventListener = addListenerMock;
@@ -415,7 +419,7 @@ describe('enhanced-event-listener', () => {
     window.addEventListener = originalAddListener;
   });
 
-  test('`passive` option is forwarded to EventTarget.addEventListener', () => {
+  test('`passive` is forwarded to EventTarget.addEventListener', () => {
     // It's not possible to test the behaviour at the moment since e.defaultPrevented seems to be
     // always false in jsodom, even on non-passive. Either way, it's more important to test that
     // the parameter is passed (or not passed) so handling the default can be left to the
