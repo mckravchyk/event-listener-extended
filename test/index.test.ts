@@ -65,6 +65,55 @@ describe('enhanced-event-listener', () => {
     expect(fireCount).toBe(rounds);
   });
 
+  test('A listener added with `once` option observes only the first event', () => {
+    // The target which the event is bound too
+    const eventTarget = document.getElementById('list-1')!;
+
+    // A child node of the event target - the event will be fired on the child node
+    const inputTarget = eventTarget.childNodes[0];
+
+    let fireCount = 0;
+
+    addListener({
+      target: eventTarget,
+      eventName: 'mousedown click',
+      callback() { fireCount += 1; },
+      once: true,
+    });
+
+    fireEvent(inputTarget, 'mousedown', 1);
+    expect(fireCount).toBe(1);
+    fireEvent(inputTarget, 'click', 1);
+    expect(fireCount).toBe(1);
+  });
+
+  test('A listener observes a custom event', () => {
+    // The target which the event is bound too
+    const eventTarget = document.getElementById('list-1')!;
+
+    // A child node of the event target - the event will be fired on the child node
+    const inputTarget = eventTarget.childNodes[0];
+
+    let fireCount = 0;
+    let detail = '';
+
+    interface MyCustomEvent extends Event {
+      detail: string
+    }
+
+    addListener({
+      target: eventTarget,
+      eventName: 'myCustomEvent',
+      callback(e: MyCustomEvent) { fireCount += 1; detail = e.detail; },
+      once: true,
+    });
+
+    const customEvent = new CustomEvent('myCustomEvent', { bubbles: true, detail: 'test' });
+    inputTarget.dispatchEvent(customEvent);
+    expect(fireCount).toBe(1);
+    expect(detail).toBe('test');
+  });
+
   test('2 identical listeners sharing the same callback do not collide', () => {
     const eventTarget = document.getElementById('list-1')!;
 
@@ -249,28 +298,6 @@ describe('enhanced-event-listener', () => {
 
     expect(parentFireCount).toBe(5);
     expect(childFireCount).toBe(4);
-  });
-
-  test('A listener added with `once` option observes only the first event', () => {
-    // The target which the event is bound too
-    const eventTarget = document.getElementById('list-1')!;
-
-    // A child node of the event target - the event will be fired on the child node
-    const inputTarget = eventTarget.childNodes[0];
-
-    let fireCount = 0;
-
-    addListener({
-      target: eventTarget,
-      eventName: 'mousedown click',
-      callback() { fireCount += 1; },
-      once: true,
-    });
-
-    fireEvent(inputTarget, 'mousedown', 1);
-    expect(fireCount).toBe(1);
-    fireEvent(inputTarget, 'click', 1);
-    expect(fireCount).toBe(1);
   });
 
   test('A listener with a delegate selector targeting multiple nodes in the same lineage is fired for each matched node', () => {
