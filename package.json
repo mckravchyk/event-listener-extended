@@ -62,7 +62,7 @@
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "^2.4.0",
-    "typescript": "5.2"
+    "typescript": "5.3"
   },
   "dependencies": {
     "detect-event-listener": "^1.0.5",
