@@ -5,7 +5,6 @@
   "author": "Maciej Krawczyk",
   "homepage": "https://github.com/mckravchyk/event-listener-extended",
   "license": "MIT",
-  "private": true,
   "main": "./dist/event-listener-extended.common.js",
   "module": "./dist/event-listener-extended.mjs",
   "exports": {
