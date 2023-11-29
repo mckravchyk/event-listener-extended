@@ -37,9 +37,13 @@
   ],
   "keywords": [
     "addEventListener",
+    "event-listener",
     "event",
     "events",
-    "DOMEvent"
+    "DOMEvent",
+    "browser",
+    "event-delegation",
+    "delegated-event"
   ],
   "devDependencies": {
     "@babel/core": "^7.18.9",
